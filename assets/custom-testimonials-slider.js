@@ -1,13 +1,18 @@
 // initialize slideshow
 
-const slider_html = document.querySelector(".testimonial-slider");
-const slider = new Flickity(slider_html, {
+const carousels = document.querySelectorAll(".testimonial-slider");
+carousels.forEach((elem)=> {
+    new Flickity(elem, {
     pageDots: false,
     autoPlay: false,
     wrapAround: true,
     cellAlign: 'left',
     pauseAutoPlayOnHover: false
 })
+})
+
+
+
 // config:
 // assume there is just one single slider on the page
 // navigation dots should be disabled
