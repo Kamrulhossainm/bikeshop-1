@@ -299,10 +299,19 @@
                   const breaksTxt = document.querySelector('#meta-information-breaks');
 
                   function updateUI(variantOption) {
+                    // VariantMetaData["Electric"].weight
+                    // VariantMetaData["Regular"].weight
+                    // VariantMetaData["VariantOption"].weight
 
+                    console.log(variantMetaData[variantOption].weight)
                   }
                   //subscribe to variant changes and update UI based on new selection
                   //...
+
+                  document.addEventListener('afterVariantChange', event => {
+                    console.log(event.detail.newVariant.option1);
+                    updateUI(event.detail.newVariant.option1);
+                  })
 
 
 
