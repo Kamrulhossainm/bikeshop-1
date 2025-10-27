@@ -97,13 +97,15 @@
                       loop
                       muted
                       playsinline
-                      preload="metadata"
-                      poster="{{ block.settings.video_poster | image_url: width: 400 }}"
+                      preload="auto"
+                      poster="{% if block.settings.video_poster %}{{ block.settings.video_poster | image_url: width: 400 }}{% elsif product.featured_image %}{{ product.featured_image | image_url: width: 400 }}{% endif %}"
                     >
-                      <source src="{{ block.settings.product_video }}" type="video/mp4">
+                      <source src="{{ block.settings.product_video.sources[1].url }}" type="video/mp4">
                     </video>
-                  {% elsif product.featured_media %}
-                    {{ product.featured_media | image_url: width: 400 | image_tag: class: 'product-image' }}
+                  {% elsif product.media[0].media_type == 'video' %}
+                    {{ product.media[0] | video_tag: autoplay: false, loop: true, muted: true, controls: false, class: 'product-video' }}
+                  {% elsif product.featured_image %}
+                    {{ product.featured_image | image_url: width: 400 | image_tag: class: 'product-image' }}
                   {% endif %}
                 </div>
 
@@ -132,6 +134,19 @@
                       <div class="product-details">
                         <h3 class="product-title">{{ product.title }}</h3>
                         <p class="product-price">{{ product.price | money }}</p>
+                        {% if product.available %}
+                          <button class="add-to-cart-btn" data-product-id="{{ product.variants.first.id }}" onclick="event.preventDefault(); event.stopPropagation();">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <path d="M9 2L7.17 4H3a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-4.17L15 2H9z"/>
+                              <circle cx="12" cy="13" r="3"/>
+                            </svg>
+                            Add to Cart
+                          </button>
+                        {% else %}
+                          <button class="add-to-cart-btn sold-out-btn" disabled>
+                            Sold Out
+                          </button>
+                        {% endif %}
                       </div>
                     </div>
                   </div>
@@ -268,12 +283,13 @@
     flex-direction: column;
     justify-content: center;
     color: white;
+    gap: 8px;
   }
 
   .product-title {
     font-size: 16px;
     font-weight: 500;
-    margin: 0 0 5px 0;
+    margin: 0;
     line-height: 1.2;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -282,9 +298,57 @@
   }
 
   .product-price {
-    font-size: 14px;
+    font-size: 16px;
+    font-weight: 600;
     margin: 0;
-    opacity: 0.9;
+  }
+
+  .add-to-cart-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: white;
+    color: #333;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    pointer-events: auto;
+    z-index: 20;
+    position: relative;
+  }
+
+  .add-to-cart-btn:hover {
+    background: #f0f0f0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .add-to-cart-btn:active {
+    transform: translateY(0);
+  }
+
+  .add-to-cart-btn.sold-out-btn {
+    background: #999;
+    color: white;
+    cursor: not-allowed;
+  }
+
+  .add-to-cart-btn.sold-out-btn:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .add-to-cart-btn.adding {
+    background: #4CAF50;
+    color: white;
+  }
+
+  .add-to-cart-btn svg {
+    flex-shrink: 0;
   }
 
   .video-card-link {
@@ -354,27 +418,43 @@
       },
     });
 
-    // Video play/pause on hover
+    // Video play/pause functionality
     const videoCards = document.querySelectorAll('.video-card');
     
     videoCards.forEach(card => {
       const video = card.querySelector('.product-video');
       
       if (video) {
+        // Play on hover
         card.addEventListener('mouseenter', () => {
-          video.play().catch(e => console.log('Video play failed:', e));
+          video.play().catch(e => {
+            console.log('Video play on hover failed:', e);
+            // Try to unmute and play
+            video.muted = true;
+            video.play();
+          });
         });
         
         card.addEventListener('mouseleave', () => {
           video.pause();
           video.currentTime = 0;
         });
+
+        // Ensure video is ready
+        video.addEventListener('loadedmetadata', () => {
+          console.log('Video loaded:', video.src);
+        });
+
+        video.addEventListener('error', (e) => {
+          console.error('Video error:', e, video.src);
+        });
       }
     });
 
-    // Intersection Observer for autoplay
+    // Intersection Observer for autoplay when visible
     const observerOptions = {
-      threshold: 0.5
+      threshold: 0.5,
+      rootMargin: '0px'
     };
 
     const observer = new IntersectionObserver((entries) => {
@@ -382,7 +462,10 @@
         const video = entry.target.querySelector('.product-video');
         if (video) {
           if (entry.isIntersecting) {
-            video.play().catch(e => console.log('Autoplay failed:', e));
+            video.muted = true;
+            video.play().catch(e => {
+              console.log('Autoplay failed:', e);
+            });
           } else {
             video.pause();
           }
@@ -391,5 +474,62 @@
     }, observerOptions);
 
     videoCards.forEach(card => observer.observe(card));
+
+    // Add to Cart functionality
+    const addToCartButtons = document.querySelectorAll('.add-to-cart-btn:not(.sold-out-btn)');
+    
+    addToCartButtons.forEach(button => {
+      button.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const variantId = this.dataset.productId;
+        const originalText = this.innerHTML;
+        
+        // Show loading state
+        this.classList.add('adding');
+        this.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg> Adding...';
+        this.disabled = true;
+        
+        // Add to cart
+        fetch('/cart/add.js', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: variantId,
+            quantity: 1
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          // Success state
+          this.innerHTML = '✓ Added!';
+          
+          // Reset button after 2 seconds
+          setTimeout(() => {
+            this.innerHTML = originalText;
+            this.classList.remove('adding');
+            this.disabled = false;
+          }, 2000);
+          
+          // Trigger cart update event
+          document.dispatchEvent(new CustomEvent('cart:updated'));
+        })
+        .catch(error => {
+          console.error('Error adding to cart:', error);
+          this.innerHTML = '✕ Error';
+          this.style.background = '#f44336';
+          
+          setTimeout(() => {
+            this.innerHTML = originalText;
+            this.classList.remove('adding');
+            this.disabled = false;
+            this.style.background = '';
+          }, 2000);
+        });
+      });
+    });
   });
 </script>
