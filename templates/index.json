@@ -422,6 +422,55 @@
         "background_color": "#e8f5e9",
         "accent_color": "#2e7d32"
       }
+    },
+    "video_slider_product_wpFXqW": {
+      "type": "video-slider-product",
+      "blocks": {
+        "video_product_xBRaH7": {
+          "type": "video_product",
+          "settings": {
+            "product": "black-mountain-bike",
+            "product_video": "shopify://files/videos/video-1.mp4",
+            "view_count": "33"
+          }
+        },
+        "video_product_kiDgCM": {
+          "type": "video_product",
+          "settings": {
+            "product": "black-mountain-bike",
+            "product_video": "shopify://files/videos/video-1.mp4",
+            "view_count": "0"
+          }
+        },
+        "video_product_RTFmkY": {
+          "type": "video_product",
+          "settings": {
+            "product": "black-mountain-bike",
+            "product_video": "shopify://files/videos/video-1.mp4",
+            "view_count": "0"
+          }
+        },
+        "video_product_iJ3mcb": {
+          "type": "video_product",
+          "settings": {
+            "product": "black-mountain-bike",
+            "product_video": "shopify://files/videos/video-1.mp4",
+            "view_count": "0"
+          }
+        }
+      },
+      "block_order": [
+        "video_product_xBRaH7",
+        "video_product_kiDgCM",
+        "video_product_RTFmkY",
+        "video_product_iJ3mcb"
+      ],
+      "name": "Product Video Carousel",
+      "settings": {
+        "section_title": "Featured Products",
+        "carousel_height": 550,
+        "background_color": "#ffffff"
+      }
     }
   },
   "order": [
@@ -434,6 +483,7 @@
     "featured_collection_6frfxg",
     "featured_blog_br3dte",
     "custom_testimonials_slider_xgtnHc",
-    "inquiry_form_a7fUpx"
+    "inquiry_form_a7fUpx",
+    "video_slider_product_wpFXqW"
   ]
 }
