@@ -1,0 +1,395 @@
+{% schema %}
+{
+  "name": "Product Video Carousel",
+  "tag": "section",
+  "class": "product-video-carousel-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "section_title",
+      "label": "Section Title",
+      "default": "Featured Products"
+    },
+    {
+      "type": "range",
+      "id": "carousel_height",
+      "min": 400,
+      "max": 800,
+      "step": 50,
+      "unit": "px",
+      "label": "Carousel Height",
+      "default": 550
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background Color",
+      "default": "#ffffff"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "video_product",
+      "name": "Video Product",
+      "settings": [
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Select Product"
+        },
+        {
+          "type": "video",
+          "id": "product_video",
+          "label": "Product Video"
+        },
+        {
+          "type": "image_picker",
+          "id": "video_poster",
+          "label": "Video Thumbnail"
+        },
+        {
+          "type": "text",
+          "id": "view_count",
+          "label": "View Count",
+          "default": "0",
+          "info": "Display view count (e.g., 155, 1.2K, 4K)"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product Video Carousel",
+      "blocks": [
+        {
+          "type": "video_product"
+        },
+        {
+          "type": "video_product"
+        },
+        {
+          "type": "video_product"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
+
+{% if section.settings.section_title != blank %}
+  <h2 class="video-carousel-title">{{ section.settings.section_title }}</h2>
+{% endif %}
+
+<div class="video-carousel-wrapper" style="background-color: {{ section.settings.background_color }};">
+  <div class="video-carousel-container">
+    <div class="swiper video-carousel-swiper">
+      <div class="swiper-wrapper">
+        {% for block in section.blocks %}
+          {% assign product = block.settings.product %}
+          {% if product != blank %}
+            <div class="swiper-slide" {{ block.shopify_attributes }}>
+              <div class="video-card">
+                <!-- Video Container -->
+                <div class="video-container">
+                  {% if block.settings.product_video != blank %}
+                    <video 
+                      class="product-video"
+                      loop
+                      muted
+                      playsinline
+                      preload="metadata"
+                      poster="{{ block.settings.video_poster | image_url: width: 400 }}"
+                    >
+                      <source src="{{ block.settings.product_video }}" type="video/mp4">
+                    </video>
+                  {% elsif product.featured_media %}
+                    {{ product.featured_media | image_url: width: 400 | image_tag: class: 'product-image' }}
+                  {% endif %}
+                </div>
+
+                <!-- Overlay Content -->
+                <div class="video-overlay">
+                  <!-- View Count Badge -->
+                  <div class="overlay-top">
+                    {% if block.settings.view_count != blank and block.settings.view_count != "0" %}
+                      <div class="view-count-badge">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                          <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5M12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5m0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3"></path>
+                        </svg>
+                        <span>{{ block.settings.view_count }}</span>
+                      </div>
+                    {% endif %}
+                  </div>
+
+                  <!-- Product Info at Bottom -->
+                  <div class="overlay-bottom">
+                    <div class="product-info-card">
+                      <div class="product-image-thumb">
+                        {% if product.featured_image %}
+                          {{ product.featured_image | image_url: width: 100 | image_tag: alt: product.title }}
+                        {% endif %}
+                      </div>
+                      <div class="product-details">
+                        <h3 class="product-title">{{ product.title }}</h3>
+                        <p class="product-price">{{ product.price | money }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Click to View Product -->
+                <a href="{{ product.url }}" class="video-card-link" aria-label="View {{ product.title }}"></a>
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <!-- Navigation Buttons -->
+      <div class="swiper-button-prev"></div>
+      <div class="swiper-button-next"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .video-carousel-title {
+    text-align: center;
+    font-size: 2rem;
+    margin: 2rem 0;
+    font-weight: 600;
+  }
+
+  .video-carousel-wrapper {
+    padding: 40px 20px;
+    overflow: hidden;
+  }
+
+  .video-carousel-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .video-carousel-swiper {
+    height: {{ section.settings.carousel_height }}px;
+    padding: 0 50px;
+  }
+
+  .video-card {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+  }
+
+  .video-card:hover {
+    transform: scale(1.02);
+  }
+
+  .video-container {
+    width: 100%;
+    height: 100%;
+    background: #dcdcdc;
+  }
+
+  .product-video,
+  .product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+
+  .overlay-top {
+    padding: 15px;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), transparent);
+  }
+
+  .view-count-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .overlay-bottom {
+    padding: 10px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.3), transparent);
+  }
+
+  .product-info-card {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    border-radius: 8px;
+  }
+
+  .product-image-thumb {
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+    border-radius: 5px;
+    overflow: hidden;
+    background: white;
+  }
+
+  .product-image-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .product-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: white;
+  }
+
+  .product-title {
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0 0 5px 0;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .product-price {
+    font-size: 14px;
+    margin: 0;
+    opacity: 0.9;
+  }
+
+  .video-card-link {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+  }
+
+  .swiper-button-prev,
+  .swiper-button-next {
+    color: #333;
+    background: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .swiper-button-prev:after,
+  .swiper-button-next:after {
+    font-size: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .video-carousel-swiper {
+      padding: 0 20px;
+    }
+
+    .swiper-button-prev,
+    .swiper-button-next {
+      width: 30px;
+      height: 30px;
+    }
+
+    .swiper-button-prev:after,
+    .swiper-button-next:after {
+      font-size: 16px;
+    }
+  }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const swiper = new Swiper('.video-carousel-swiper', {
+      slidesPerView: 1,
+      spaceBetween: 20,
+      loop: false,
+      navigation: {
+        nextEl: '.swiper-button-next',
+        prevEl: '.swiper-button-prev',
+      },
+      breakpoints: {
+        640: {
+          slidesPerView: 2,
+          spaceBetween: 20,
+        },
+        1024: {
+          slidesPerView: 3,
+          spaceBetween: 30,
+        },
+      },
+    });
+
+    // Video play/pause on hover
+    const videoCards = document.querySelectorAll('.video-card');
+    
+    videoCards.forEach(card => {
+      const video = card.querySelector('.product-video');
+      
+      if (video) {
+        card.addEventListener('mouseenter', () => {
+          video.play().catch(e => console.log('Video play failed:', e));
+        });
+        
+        card.addEventListener('mouseleave', () => {
+          video.pause();
+          video.currentTime = 0;
+        });
+      }
+    });
+
+    // Intersection Observer for autoplay
+    const observerOptions = {
+      threshold: 0.5
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const video = entry.target.querySelector('.product-video');
+        if (video) {
+          if (entry.isIntersecting) {
+            video.play().catch(e => console.log('Autoplay failed:', e));
+          } else {
+            video.pause();
+          }
+        }
+      });
+    }, observerOptions);
+
+    videoCards.forEach(card => observer.observe(card));
+  });
+</script>
